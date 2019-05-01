@@ -23,20 +23,27 @@ CREATE TABLE products(
     -- stock_quantity (how much of the product is available in stores)
     stock_quantity INTEGER NOT NULL,
 
+    -- product_sales
+    product_sales DECIMAL(10, 2) DEFAULT 0.0,
+
     -- make item_id the unique key of this table
     PRIMARY KEY (item_id)
 );
 
--- Insert rows with data into table
-INSERT INTO products (product_name, department_name, price, stock_quantity)
-VALUES 
-    ("Iphone X", "electronics", 999.00, 200),
-    ("Google home", "electronics", 80.00, 50),
-    ("xbox one", "electronics", 499.00, 20),
-    ("Dyson vaccum", "home cleaning", 499.00, 10),
-    ("Wall clock", "home decor", 49.99, 49),
-    ("Persian carpet", "home decor", 300.00, 15),
-    ("Pixel 3 phone", "electronics", 899.98, 50),
-    ("ipad mini 4", "tablet", 300.00, 25),
-    ("Mac book pro", "electronics", 200.00, 20),
-    ("Sectional sofa", "furniture", 1200.49, 4);
+
+-- create table 
+CREATE TABLE departments(
+
+    -- department_id
+    department_id INTEGER NOT NULL AUTO_INCREMENT,
+
+    -- department_name
+    department_name VARCHAR(50) NOT NULL,
+
+    -- over_head_costs (A dummy number you set for each department)
+    over_head_costs DECIMAL(10, 2) NOT NULL,
+
+    -- make department_id the unique key of this table
+    PRIMARY KEY (department_id)
+
+);

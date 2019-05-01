@@ -4,6 +4,9 @@ var mysql = require("mysql");
 // Include the inquirer npm package
 var inquirer = require("inquirer");
 
+// Include the dotenv npm package
+require('dotenv').config();
+
 // connect to your database using mysql.createConnection()
 var connection = mysql.createConnection({
     host: "localhost",
@@ -16,6 +19,8 @@ var connection = mysql.createConnection({
     database: "bamazon_DB"
 });
 
+//Export bamazonManagerView() API to other js files
+exports.managerView = bamazonManagerView();
 
 /*************************************************************************************************
  * Function: managerView()
@@ -23,8 +28,6 @@ var connection = mysql.createConnection({
  * like to go with
  * "View Products for Sale" || "View Low Inventory" || "Add to Inventory" || "Add New Product"
  *************************************************************************************************/
-//exports.managerView = function () {
-exports.managerView = bamazonManagerView();
 
 function bamazonManagerView() {
 
@@ -57,7 +60,7 @@ function bamazonManagerView() {
                     break;
 
                 default:
-                    console.log("Exiting the app!!");
+                    console.log("\n\n\tExiting the app!!\n\n");
                     connection.end();
                     
             }
@@ -67,7 +70,7 @@ function bamazonManagerView() {
             console.log(err);
         });
 
-}
+} //End of bamazonManagerView()
 
 
 /*************************************************************************************************
@@ -93,7 +96,7 @@ function viewProductsForSale(runMgrView) {
         console.log("\t-------" + "\t\t|\t" + "---------" + "\t\t|\t" + "----------" + "\t|\t" + "--------");
 
         res.forEach(item =>
-            console.log("\t" + item.item_id + "\t\t|\t" + item.product_name + "\t\t|\t" + parseFloat(item.price) + "\t\t|\t" + item.stock_quantity)
+            console.log("\t" + item.item_id + "\t\t|\t" + item.product_name + "\t\t|\t" + item.price.toFixed(2) + "\t\t|\t" + item.stock_quantity)
         );
 
         if (runMgrView) {
@@ -149,14 +152,15 @@ function viewLowInventory() {
 
 async function addToInventory() {
 
-    console.log("Inside addToInventory()");
+    // console.log("Inside addToInventory()");
 
     //Ask Manager which product he wants to add more to
     console.log("\n\nWhich item would you like to add more to?\n");
 
-    // console.log("2222");
     //Display all the items for sale to the Manager
     viewProductsForSale(false);
+
+    console.log("\n\n");
 
     const itemInfo = await addToInventoryPrompt();
 
@@ -178,7 +182,7 @@ async function addToInventory() {
 
             if (err) throw err;
 
-            console.log(`Stock Quantity increased to ${updatedStockQuantity} for ${productName}.`);
+            console.log(`\n\tStock Quantity increased to ${updatedStockQuantity} for ${productName}.`);
 
             //Call manager view
             console.log("\n\n");
@@ -246,7 +250,7 @@ async function addNewProduct() {
 
         if (err) throw err;
 
-        console.log("Item successfully created in database!");
+        console.log("\n\n\tItem successfully created in database!");
 
         //Call manager view
         console.log("\n\n");

@@ -7,8 +7,6 @@ var inquirer = require("inquirer");
 // Include the dotenv npm package
 require('dotenv').config();
 
-
-
 // connect to your database using mysql.createConnection()
 var connection = mysql.createConnection({
     host: "localhost",
@@ -21,77 +19,19 @@ var connection = mysql.createConnection({
     database: "bamazon_DB"
 });
 
+//Export bamazonCustomerView() API to other js files
+exports.customerView = bamazonCustomerView();
 
-console.log("**************************************************************");
-console.log("*                      B A M A Z O N                         *");
-console.log("**************************************************************");
-console.log("\n");
-
-//Call function to start the application
-startApp();
-
-/*************************************************************************************************
- * Function: startApp()
- * This function gives user the choise which view the user wants to see (Customer/Manager)
- *************************************************************************************************/
-
-function startApp() {
-
-    //Take user input
-    inquirer.prompt({
-            type: "list",
-            message: "Enter your choice of Bamazon-View?",
-            choices: ["Manager", "Customer"],
-            name: "view"
-        })
-        .then(function (inquirerResponse) {
-
-            //Call function with user option to execute desired operation
-            switch (inquirerResponse.view) {
-
-                case 'Manager':
-                
-                    console.log("--------------------------------------------------------------");
-                    console.log("|                      MANAGER VIEW                          |");
-                    console.log("--------------------------------------------------------------");
-                    console.log("\n");
-
-                    // Include the bamazonManager.js file
-                    const manager = require('./bamazonManager');
-
-                    //Call managerView() function from bamazonManager.js file
-                    // manager.managerView();
-                    break;
-
-                case 'Customer':
-                    customerView();
-                    break;
-
-                default:
-                    console.log("Incorrect user input!!");
-                    startApp();
-            }
-
-        })
-        .catch(function (err) {
-            console.log(err);
-        });
-
-
-} //End of startApp()
 
 
 /*************************************************************************************************
- * Function: customerView()
+ * Function: bamazonCustomerView()
  * This function displays all items in sale and lets user select an item to buy
  *************************************************************************************************/
 
-function customerView() {
+function bamazonCustomerView() {
 
-    console.log("--------------------------------------------------------------");
-    console.log("|                      CUSTOMER VIEW                         |");
-    console.log("--------------------------------------------------------------");
-    console.log("\n");
+    //console.log("Inside bamazonCustomerView()");
 
     let queryString = "SELECT * FROM products";
 
@@ -99,80 +39,197 @@ function customerView() {
 
         if (err) throw err;
 
-        console.log("\n\nItems available for sale:\n");
+        console.log("\t\t---- Items available for sale ---- \n");
 
-        console.log("\tITEM ID" + "\t|\t" + "ITEM NAME" + "\t\t|\t" + "ITEM PRICE");
-        console.log("\t-------" + "\t|\t" + "---------" + "\t\t|\t" + "----------");
+        console.log("\t" + "ITEM ID" + "\t|\t" + "ITEM NAME" + "\t\t|\t" + "ITEM PRICE");
+        console.log("\t" + "-------" + "\t|\t" + "---------" + "\t\t|\t" + "----------");
 
         res.forEach(item =>
-            console.log(item.item_id + "\t|\t" + item.product_name + "\t\t|\t" + parseFloat(item.price)));
+            console.log("\t" + item.item_id + "\t|\t" + item.product_name + "\t\t|\t" + item.price.toFixed(2))
+        );
 
+        console.log("\n\n");
 
-        console.log("\n\nWhich item would you like to buy?\n");
+        //Use inquirer to ask user if user would like to run the app again to buy an item or exit
+        inquirer
+            .prompt({
+                name: 'runAgain',
+                type: 'confirm',
+                message: 'Do you want to buy items?',
+                default: true
+            })
+            .then(function (userReponse) {
 
-        // Using inquirer to ask user for information about which product they want to buy
-        inquirer.prompt([{
-                //Ask user the item ID of the product they would like to buy
-                name: "item_id",
-                type: "input",
-                message: "Enter Item Id:",
-                validate: function (itemIdInput) {
-                    if (!isNaN(itemIdInput)) {
+                if (userReponse.runAgain) {
 
-                        //TO-DO: Check to see whether the Item id entered is withing the range
-
-                        return true;
-                    } else {
-                        return "Please provide a valid item id!";
-                    }
+                    //Call function to buy an item from the sales items list
+                    buyItem();
+                } else {
+                    console.log("\n\n\tExiting the app!!\n\n");
+                    connection.end();
                 }
-            },
-            {
-                // Ask how many units of the product user would like to buy
-                name: "noOfUnites",
-                message: "How many units you would like to buy?",
-                type: "input",
-                validate: function (noOfUnites) {
-                    if (!isNaN(noOfUnites)) {
-                        return true;
-                    } else {
-                        return "Please enter a valid quantity!";
-                    }
-                }
-            }
-        ]).then(function (itemInfo) {
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
 
-            queryString = `SELECT * FROM products WHERE item_id=${itemInfo.item_id}`;
+    });
 
-            query = connection.query(queryString, function (err, buyResp) {
+} //End of bamazonCustomerView()
+
+
+
+
+/*************************************************************************************************
+ * Function: buyItem()
+ * This function lets user select an item to buy and no of units to buy
+ *************************************************************************************************/
+
+async function buyItem() {
+
+    // console.log("Inside buyItem()");
+
+    console.log("\n\nWhich item would you like to buy?\n");
+
+    // Use inquirer to ask user for information about which product they want to buy
+    const itemInfo = await getItemIdAndUnitsToBuyPrompt();
+
+
+    let queryString = `SELECT * FROM products WHERE item_id= ?`;
+
+    let query = await connection.query(queryString, itemInfo.item_id, function (err, buyResp) {
+
+        if (err) throw err;
+
+        // console.log(buyResp);
+
+        // Check if the store has enough of the product to meet the customer's request
+        if (buyResp[0].stock_quantity < itemInfo.noOfUnites) {
+
+            // console.log(buyResp[0].stock_quantity + " || " + itemInfo.noOfUnites);
+            console.log(`\n\n\tInsufficient quantity of ${buyResp[0].product_name} in stock!`);
+
+            //Call customer view
+            console.log("\n");
+            bamazonCustomerView();
+
+        } else {
+
+            //Update the SQL database to reflect the remaining quantity
+            let updatedStockQuantity = parseInt(buyResp[0].stock_quantity) - parseInt(itemInfo.noOfUnites);
+            //console.log("updatedStockQuantity = " + updatedStockQuantity);
+
+
+            //Once the update goes through, show the customer the total cost of their purchase.
+            const totalCostOfPurchase = parseInt(itemInfo.noOfUnites) * parseFloat(buyResp[0].price);
+
+
+            //Update the SQL database to reflect the added quantity
+            queryString = `UPDATE products SET stock_quantity = ?, product_sales = ? WHERE item_id = ?`;
+
+            query = connection.query(queryString, [updatedStockQuantity, totalCostOfPurchase, itemInfo.item_id], function (err, res) {
 
                 if (err) throw err;
 
-                // console.log(buyResp);
 
-                // Check if the store has enough of the product to meet the customer's request
-                if (buyResp[0].stock_quantity < itemInfo.noOfUnites) {
-                    // console.log(buyResp[0].stock_quantity + " || " + itemInfo.noOfUnites);
-                    console.log(`Insufficient quantity of ${buyResp[0].product_name} in stock!`);
-                } else {
-                    //Update the SQL database to reflect the remaining quantity
-                    buyResp[0].stock_quantity -= itemInfo.noOfUnites;
+                console.log("\n\nThank you, your order has been placed.");
+                console.log(`\nTotal cost of your purchase of ${itemInfo.noOfUnites} unit(s) of '${buyResp[0].product_name}' is $${totalCostOfPurchase.toFixed(2)}.`);
 
-                    //Once the update goes through, show the customer the total cost of their purchase.
-                    const totalCostOfPurchase = itemInfo.noOfUnites * buyResp[0].price;
-                    console.log("\nThank you, your order has been placed.");
-                    console.log(`\nTotal cost of your purchase of ${itemInfo.noOfUnites} unit(s) of '${buyResp[0].product_name}' is $${totalCostOfPurchase}.`);
-                }
-                //Start app again for user to buy other items
-                customerView();
+                console.log("\n\nBuy more items...");
 
+                //Call customer view
+                console.log("\n");
+                bamazonCustomerView();
             });
 
-            // logs the actual query being run
-            // console.log(query.sql);
+        }
 
-        });
-        // connection.end();
-    })
+    });
 
-}
+} //End of buyItem()
+
+
+
+
+
+/*************************************************************************************************
+ * Function: getItemIdAndUnitsToBuyPrompt()
+ * Function that uses inquirer to ask user for information about which product they want 
+ * to buy and what quantity
+ *************************************************************************************************/
+
+function getItemIdAndUnitsToBuyPrompt() {
+
+    // console.log("Inside getItemIdAndUnitsToBuyPrompt()");
+
+    return inquirer.prompt([{
+            //Ask user the item ID of the product they would like to buy
+            name: "item_id",
+            type: "input",
+            message: "Enter Item Id:",
+            validate: function (itemIdInput) {
+                //Check to see whether the Item id entered is a number and within the range
+                if (!isNaN(itemIdInput)) {
+
+                    // console.log("\n isItemIsInRange = " + isItemIsInRange(itemIdInput));
+
+                    return true;
+
+                } else {
+                    return "Please provide a valid item id!";
+                }
+            }
+        },
+        {
+            // Ask how many units of the product user would like to buy
+            name: "noOfUnites",
+            message: "How many units you would like to buy?",
+            type: "input",
+            validate: function (noOfUnites) {
+                if (!isNaN(noOfUnites)) {
+                    return true;
+                } else {
+                    return "Please enter a valid quantity!";
+                }
+            }
+        }
+    ]);
+
+} //End of getItemIdAndUnitsToBuyPrompt()
+
+
+
+/*************************************************************************************************
+ * Function: isItemIsInRange(itemIdInput)
+ * Function that checks to see whether the item id entered by the user is a valid item id 
+ *************************************************************************************************/
+
+async function isItemIsInRange(itemIdInput) {
+
+    // let inRange = false;
+
+    // console.log("Inside isItemIsInRange(itemIdInput)");
+
+    let queryString = `SELECT * FROM products WHERE item_id = ?`;
+
+    let query = await connection.query(queryString, itemIdInput, function (err, resp) {
+
+        if (err) throw err;
+
+        // If user gets a response for the input item id then return true else return false
+        if (resp[0]) {
+
+            console.log("\nValid data");
+            // inRange = true;
+            return true;
+
+        } else {
+            console.log("\nIn-Valid data");
+            return false;
+        }
+
+    });
+
+    // return inRange;
+
+} //End of isItemIsInRange(itemIdInput)
