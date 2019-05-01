@@ -44,23 +44,23 @@ $ node bamazon.js
 
 
 ## Screenshots
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/1_StartApp.png "Bamazon_HomePage")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/01_Bamazon_HomePage.png "Bamazon_HomePage")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/2_Concert.png "Bamazon_CustomerView")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/02_Bamazon_CustomerView.png "Bamazon_CustomerView")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/3_SelectSpotifySearch.png "Bamazon_CustomerView_BuyItem")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/03_Bamazon_CustomerView_BuyItem.png "Bamazon_CustomerView_BuyItem")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/4_SpotifyResults.png "Bamazon_ManagerView")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/04_Bamazon_ManagerView.png "Bamazon_ManagerView")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/5_SelectMovieSearch.png "Bamazon_ManagerView_ViewProductsForSale")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/05_Bamazon_ManagerView_ViewProductsForSale.png "Bamazon_ManagerView_ViewProductsForSale")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/6_ReadFile.png "Bamazon_ManagerView_ViewLowInventory")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/06_Bamazon_ManagerView_ViewLowInventory.png "Bamazon_ManagerView_ViewLowInventory")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/7_ReadFile_SpotifySearch.png "Bamazon_ManagerView_AddToInventory")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/07_Bamazon_ManagerView_AddToInventory.png "Bamazon_ManagerView_AddToInventory")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/7_ReadFile_SpotifySearch.png "Bamazon_ManagerView_AddNewProduct")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/08_Bamazon_ManagerView_AddNewProduct.png "Bamazon_ManagerView_AddNewProduct")
 
-![alt text](https://github.com/ankitadhyani/liri-node-app/blob/master/snapshots/7_ReadFile_SpotifySearch.png "Bamazon_SupervisorView_Complete")
+![alt text](https://github.com/ankitadhyani/Bamazon/blob/master/snapshots/09_Bamazon_SupervisorView_Complete.png "Bamazon_SupervisorView_Complete")
 
 
 
