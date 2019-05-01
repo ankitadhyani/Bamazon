@@ -62,7 +62,7 @@ function bamazonManagerView() {
                 default:
                     console.log("\n\n\tExiting the app!!\n\n");
                     connection.end();
-                    
+
             }
 
         })
@@ -79,7 +79,7 @@ function bamazonManagerView() {
  * The app should list every available item: the item IDs, names, prices, and quantities.
  *************************************************************************************************/
 
-function viewProductsForSale(runMgrView) {
+function viewProductsForSale(runMgrView, cb) {
 
     // console.log("Inside viewProductsForSale()");
 
@@ -103,6 +103,8 @@ function viewProductsForSale(runMgrView) {
             //Call manager view
             console.log("\n\n");
             bamazonManagerView();
+        } else {
+            cb();
         }
 
     });
@@ -150,7 +152,7 @@ function viewLowInventory() {
  * currently in the store.
  *************************************************************************************************/
 
-async function addToInventory() {
+function addToInventory() {
 
     // console.log("Inside addToInventory()");
 
@@ -158,57 +160,62 @@ async function addToInventory() {
     console.log("\n\nWhich item would you like to add more to?\n");
 
     //Display all the items for sale to the Manager
-    viewProductsForSale(false);
-
-    console.log("\n\n");
-
-    const itemInfo = await addToInventoryPrompt();
-
-    let queryString = `SELECT * FROM products WHERE item_id=${itemInfo.item_id}`;
-
-    let query = connection.query(queryString, function (err, res) {
-
-        if (err) throw err;
-
+    viewProductsForSale(false, async function () {
         console.log("\n\n");
 
-        const productName = res[0].product_name;
-        let updatedStockQuantity = parseInt(res[0].stock_quantity) + parseInt(itemInfo.noOfUnites);
+        const itemInfo = await addToInventoryPrompt();
 
-        //Update the SQL database to reflect the added quantity
-        let queryString = `UPDATE products SET stock_quantity = ? WHERE item_id = ?`;
+        let queryString = `SELECT * FROM products WHERE item_id=${itemInfo.item_id}`;
 
-        let query = connection.query(queryString, [updatedStockQuantity, itemInfo.item_id], function (err, res) {
+        let query = connection.query(queryString, function (err, res) {
 
             if (err) throw err;
 
-            console.log(`\n\tStock Quantity increased to ${updatedStockQuantity} for ${productName}.`);
-
-            //Call manager view
             console.log("\n\n");
-            bamazonManagerView();
+
+            const productName = res[0].product_name;
+            let updatedStockQuantity = parseInt(res[0].stock_quantity) + parseInt(itemInfo.noOfUnites);
+
+            //Update the SQL database to reflect the added quantity
+            let queryString = `UPDATE products SET stock_quantity = ? WHERE item_id = ?`;
+
+            let query = connection.query(queryString, [updatedStockQuantity, itemInfo.item_id], function (err, res) {
+
+                if (err) throw err;
+
+                console.log(`\n\tStock Quantity increased to ${updatedStockQuantity} for ${productName}.`);
+
+                //Call manager view
+                console.log("\n\n");
+                bamazonManagerView();
+
+            });
 
         });
-
     });
+
+
 
 } //End of addToInventory()
 
 
 //Function that takes in item id and its respective no of units to be added to the stock -----------------
-function addToInventoryPrompt() {
+async function addToInventoryPrompt() {
 
     return inquirer.prompt([{
             //Ask user the item ID of the product they would like to buy
             name: "item_id",
             type: "input",
             message: "Item Id?",
-            validate: function (itemIdInput) {
+            validate: async function (itemIdInput) {
+                //Check to see whether the Item id entered is a number and within the range
                 if (!isNaN(itemIdInput)) {
 
-                    //TO-DO: Check to see whether the Item id entered is withing the range
+                    const inRange = await isItemInRange(itemIdInput);
+                    // console.log("\n isItemInRange = " + inRange);
+                    if(inRange)
+                        return true;
 
-                    return true;
                 } else {
                     return "Please provide a valid item id!";
                 }
@@ -314,4 +321,44 @@ function addNewProductPrompt() {
             }
         }
     ]);
-}
+
+}// End of addNewProductPrompt()
+
+
+/*************************************************************************************************
+ * Function: isItemIsInRange(itemIdInput)
+ * Function that checks to see whether the item id entered by the user is a valid item id 
+ *************************************************************************************************/
+
+function isItemInRange(itemIdInput) {
+
+    // console.log("Inside isItemIsInRange(itemIdInput)");
+
+    return new Promise((resolve,reject) => {
+
+        let queryString = `SELECT * FROM products WHERE item_id = ?`;
+
+        let query = connection.query(queryString, [itemIdInput], function (err, resp) {
+
+            if (err) {
+                console.log(err);
+                return reject(err);
+            }
+
+            // If user gets a response for the input item id then return true else return false
+            if (resp[0]) {
+
+                // console.log("\nValid data");
+                return resolve(true)
+
+            } else {
+                // console.log("\nIn-Valid data");
+                return resolve(false);
+            }
+
+        });
+
+    });
+    
+
+} //End of isItemIsInRange(itemIdInput)

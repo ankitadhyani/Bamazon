@@ -158,7 +158,7 @@ async function buyItem() {
  * to buy and what quantity
  *************************************************************************************************/
 
-function getItemIdAndUnitsToBuyPrompt() {
+async function getItemIdAndUnitsToBuyPrompt() {
 
     // console.log("Inside getItemIdAndUnitsToBuyPrompt()");
 
@@ -167,13 +167,14 @@ function getItemIdAndUnitsToBuyPrompt() {
             name: "item_id",
             type: "input",
             message: "Enter Item Id:",
-            validate: function (itemIdInput) {
+            validate: async function (itemIdInput) {
                 //Check to see whether the Item id entered is a number and within the range
                 if (!isNaN(itemIdInput)) {
 
-                    // console.log("\n isItemIsInRange = " + isItemIsInRange(itemIdInput));
-
-                    return true;
+                    const inRange = await isItemInRange(itemIdInput);
+                    // console.log("\n isItemInRange = " + inRange);
+                    if(inRange)
+                        return true;
 
                 } else {
                     return "Please provide a valid item id!";
@@ -204,32 +205,35 @@ function getItemIdAndUnitsToBuyPrompt() {
  * Function that checks to see whether the item id entered by the user is a valid item id 
  *************************************************************************************************/
 
-async function isItemIsInRange(itemIdInput) {
-
-    // let inRange = false;
+function isItemInRange(itemIdInput) {
 
     // console.log("Inside isItemIsInRange(itemIdInput)");
 
-    let queryString = `SELECT * FROM products WHERE item_id = ?`;
+    return new Promise((resolve,reject) => {
 
-    let query = await connection.query(queryString, itemIdInput, function (err, resp) {
+        let queryString = `SELECT * FROM products WHERE item_id = ?`;
 
-        if (err) throw err;
+        let query = connection.query(queryString, [itemIdInput], function (err, resp) {
 
-        // If user gets a response for the input item id then return true else return false
-        if (resp[0]) {
+            if (err) {
+                console.log(err);
+                return reject(err);
+            }
 
-            console.log("\nValid data");
-            // inRange = true;
-            return true;
+            // If user gets a response for the input item id then return true else return false
+            if (resp[0]) {
 
-        } else {
-            console.log("\nIn-Valid data");
-            return false;
-        }
+                // console.log("\nValid data");
+                return resolve(true)
+
+            } else {
+                // console.log("\nIn-Valid data");
+                return resolve(false);
+            }
+
+        });
 
     });
-
-    // return inRange;
+    
 
 } //End of isItemIsInRange(itemIdInput)
